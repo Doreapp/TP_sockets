@@ -9,9 +9,10 @@ package stream;
 import java.io.*;
 import java.net.*;
 
-public class EchoClient implements Handler {
-  Socket echoSocket = null;
-  ClientSendingThread sendingThread = null;
+public class EchoClient implements Handler, ConnectionFinishListener {
+  private Socket echoSocket = null;
+  private ClientSendingThread sendingThread = null;
+  private ClientListeningThread listeningThread = null;
 
   /**
    *  main method
@@ -31,24 +32,33 @@ public class EchoClient implements Handler {
     try {
       // creation socket ==> connexion
       echoSocket = new Socket(host, new Integer(port).intValue());
-      sendingThread = new ClientSendingThread(echoSocket);
+
+      sendingThread = new ClientSendingThread(echoSocket, this);
+      listeningThread = new ClientListeningThread(echoSocket, this);
+
+      sendingThread.start();
+      listeningThread.start();
     } catch (UnknownHostException e) {
       System.err.println("Don't know about host:" + host);
       System.exit(1);
     } catch (IOException e) {
-      System.err.println(
-        "Couldn't get I/O for " + "the connection to:" + host
-      );
+      System.err.println("Couldn't get I/O for " + "the connection to:" + host);
       System.exit(1);
     }
-
-    sendingThread.start();
-
-    echoSocket.close();
   }
 
-  
-  public void handle(String message){
-    //TODO
+  @Override
+  public void onConnectionFinish() {
+    try {
+      listeningThread.close();
+      echoSocket.close();
+    } catch (IOException e) {
+      e.printStackTrace();    
+      System.exit(1);
+    }
+  }
+
+  public void handle(String message) {
+    System.out.println("> " + message);
   }
 }

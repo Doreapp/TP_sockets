@@ -1,6 +1,6 @@
 /***
- * ClientThread
- * Example of a TCP server
+ * ClientSendingThread
+ * Thread sending data 
  * Date: 12/10/20
  * Authors: Antoine Mandin
  */
@@ -11,15 +11,14 @@ import java.io.*;
 import java.net.*;
 
 public class ClientSendingThread extends Thread {
-  BufferedReader stdIn = null;
-  PrintStream socOut = null;
-  BufferedReader socIn = null;
+  private BufferedReader stdIn = null;
+  private PrintStream socOut = null;
+  private ConnectionFinishListener listener;
 
-  public ClientSendingThread(Socket echoSocket) throws IOException {
-    stdIn = new BufferedReader(new InputStreamReader(System.in));
+  public ClientSendingThread(Socket echoSocket, ConnectionFinishListener listener) throws IOException {
     socOut = new PrintStream(echoSocket.getOutputStream());
-    socIn =
-      new BufferedReader(new InputStreamReader(echoSocket.getInputStream()));
+    stdIn = new BufferedReader(new InputStreamReader(System.in));
+    this.listener = listener;
   }
 
   @Override
@@ -30,13 +29,14 @@ public class ClientSendingThread extends Thread {
         line = stdIn.readLine();
         if (line.equals(".")) break;
         socOut.println(line);
-        System.out.println("echo: " + socIn.readLine());
       }
       socOut.close();
       stdIn.close();
-      socIn.close();
     } catch (IOException exc) {
       exc.printStackTrace();
+    }
+    if(listener != null){
+      listener.onConnectionFinish();
     }
   }
 }
