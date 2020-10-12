@@ -29,19 +29,20 @@ public class ClientThread extends Thread {
           new InputStreamReader(clientSocket.getInputStream())
         );
       PrintStream socOut = new PrintStream(clientSocket.getOutputStream());
+      String clientName = socIn.readLine();
+      System.out.println(clientName+" join the chat !");
+      socOut.println(clientName);
       while (true) {
         String line = socIn.readLine();
         if (line == null) break; // The client disconnected
-        System.out.println(
-          "Log (" + clientSocket.getInetAddress() + ") : \"" + line + "\"."
-        );
+        System.out.println(clientName + " : " + line);
         socOut.println(line);
       }
     } catch (Exception e) {
       System.err.println("Error in EchoServer:" + e);
     }
     System.out.println(
-      "Log (" + clientSocket.getInetAdress() + ") : Client disconnected."
+      "Log (" + clientSocket.getInetAddress() + ") : Client disconnected."
     );
   }
 }
