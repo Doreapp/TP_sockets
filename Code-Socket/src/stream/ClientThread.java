@@ -13,10 +13,12 @@ import java.net.*;
 public class ClientThread extends Thread {
   private Socket clientSocket;
   Handler handler;
+  ClientDeconnection clientDeconnection;
 
-  ClientThread(Socket s, Handler handler) {
+  public ClientThread(Socket s, Handler handler, ClientDeconnection clientDeconnection) {
     this.clientSocket = s;
     this.handler = handler;
+    this.clientDeconnection = clientDeconnection;
   }
 
   /**
@@ -35,7 +37,10 @@ public class ClientThread extends Thread {
       handler.handle(clientName+" join the chat !");
       while (true) {
         String line = socIn.readLine();
-        if (line == null) break; // The client disconnected
+        if (line == null) {
+        	clientDeconnection.disconnect(clientSocket, clientName);
+        	break; // The client disconnected
+        }
         handler.handle(clientName+" : "+line);
       }
     } catch (Exception e) {

@@ -12,7 +12,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class EchoServerMultiThreaded implements Handler {
+public class EchoServerMultiThreaded implements Handler,ClientDeconnection {
   ServerSocket listenSocket;
   List<Socket> clientListe = new ArrayList<Socket>();
 
@@ -39,7 +39,7 @@ public class EchoServerMultiThreaded implements Handler {
         Socket clientSocket = listenSocket.accept();
         clientListe.add(clientSocket);
         System.out.println("Connexion from:" + clientSocket.getInetAddress());
-        ClientThread ct = new ClientThread(clientSocket, this);
+        ClientThread ct = new ClientThread(clientSocket, this, this);
         ct.start();
       }
     } catch (Exception e) {
@@ -58,5 +58,15 @@ public class EchoServerMultiThreaded implements Handler {
     } catch (IOException e) {
       e.printStackTrace();
     }
+  }
+  
+  public void disconnect(Socket soc, String name) {
+	  for (int i = 0; i < clientListe.size(); i++) {
+        if(clientListe.get(i) == soc) {
+        	clientListe.remove(i);
+        	break;
+        }
+      }
+	  handle(name+" has left !");
   }
 }
