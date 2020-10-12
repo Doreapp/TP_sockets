@@ -12,9 +12,11 @@ import java.net.*;
 
 public class ClientThread extends Thread {
   private Socket clientSocket;
+  Handler handler;
 
-  ClientThread(Socket s) {
+  ClientThread(Socket s, Handler handler) {
     this.clientSocket = s;
+    this.handler = handler;
   }
 
   /**
@@ -30,13 +32,11 @@ public class ClientThread extends Thread {
         );
       PrintStream socOut = new PrintStream(clientSocket.getOutputStream());
       String clientName = socIn.readLine();
-      System.out.println(clientName+" join the chat !");
-      socOut.println(clientName);
+      handler.handle(clientName+" join the chat !");
       while (true) {
         String line = socIn.readLine();
         if (line == null) break; // The client disconnected
-        System.out.println(clientName + " : " + line);
-        socOut.println(line);
+        handler.handle(clientName+" : "+line);
       }
     } catch (Exception e) {
       System.err.println("Error in EchoServer:" + e);
