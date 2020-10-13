@@ -34,9 +34,7 @@ public class ClientListeningThread extends Thread {
         }
       }
       close();
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    } catch (IOException e) {} 
   }
 
   public void close() throws IOException {

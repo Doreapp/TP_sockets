@@ -11,43 +11,48 @@ import java.io.*;
 import java.net.*;
 
 public class ClientThread extends Thread {
-  private Socket clientSocket;
-  Handler handler;
-  ClientDeconnection clientDeconnection;
+  private BufferedReader socIn = null;
+  private PrintStream socOut = null;
+  private Handler handler;
+  private ClientConnectionListener clientConnectionListener;
 
-  public ClientThread(Socket s, Handler handler, ClientDeconnection clientDeconnection) {
-    this.clientSocket = s;
+  public ClientThread(
+    Socket clientSocket,
+    Handler handler,
+    ClientConnectionListener clientConnectionListener
+  ) throws IOException {
     this.handler = handler;
-    this.clientDeconnection = clientDeconnection;
+    this.clientConnectionListener = clientConnectionListener;
+    this.socIn =
+      new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+    this.socOut = new PrintStream(clientSocket.getOutputStream());
   }
 
   /**
    * receives a request from client then sends an echo to the client
-   * @param clientSocket the client socket
+   *  
    **/
   public void run() {
     try {
-      BufferedReader socIn = null;
-      socIn =
-        new BufferedReader(
-          new InputStreamReader(clientSocket.getInputStream())
-        );
-      PrintStream socOut = new PrintStream(clientSocket.getOutputStream());
-      String clientName = socIn.readLine();
-      handler.handle(clientName+" join the chat !");
+      //Read the client name
+      final String clientName = socIn.readLine();
+      clientConnectionListener.onConnect(socOut, clientName);
+      handler.handle(clientName + " join the chat !");
+
       while (true) {
         String line = socIn.readLine();
         if (line == null) {
-        	clientDeconnection.disconnect(clientSocket, clientName);
-        	break; // The client disconnected
+          clientConnectionListener.onDisconnect(socOut, clientName);
+          break; // The client disconnected
         }
-        handler.handle(clientName+" : "+line);
+        handler.handle(clientName + " : " + line);
       }
+
+      socIn.close();
+      socOut.close();
     } catch (Exception e) {
-      System.err.println("Error in EchoServer:" + e);
+      System.err.println("Error in ClientThread:" + e);
+      e.printStackTrace();
     }
-    System.out.println(
-      "Log (" + clientSocket.getInetAddress() + ") : Client disconnected."
-    );
   }
 }
