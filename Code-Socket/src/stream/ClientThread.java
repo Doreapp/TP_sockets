@@ -51,8 +51,6 @@ public class ClientThread extends Thread {
       socIn.close();
       socOut.close();
     } catch (Exception e) {
-      System.err.println("Error in ClientThread:" + e);
-      e.printStackTrace();
     }
   }
 }

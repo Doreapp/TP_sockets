@@ -1,7 +1,7 @@
 package stream;
 
-import java.net.*;
 import java.io.*;
+import java.net.*;
 
 public interface ClientConnectionListener {
   void onDisconnect(PrintStream socOut, String name);

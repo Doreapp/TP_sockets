@@ -43,10 +43,7 @@ public class EchoServerMultiThreaded
         ClientThread ct = new ClientThread(clientSocket, this, this);
         ct.start();
       }
-    } catch (Exception e) {
-      System.err.println("Error in EchoServerMultiThreaded:" + e);
-      e.printStackTrace();
-    }
+    } catch (Exception e) {}
   }
 
   public void handle(String message) {

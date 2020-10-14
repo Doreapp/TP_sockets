@@ -53,7 +53,7 @@ public class EchoClient implements Handler, ConnectionFinishListener {
       listeningThread.close();
       echoSocket.close();
     } catch (IOException e) {
-      e.printStackTrace();    
+      e.printStackTrace();
       System.exit(1);
     }
   }

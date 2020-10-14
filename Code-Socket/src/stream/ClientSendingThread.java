@@ -1,6 +1,6 @@
 /***
  * ClientSendingThread
- * Thread sending data 
+ * Thread sending data
  * Date: 12/10/20
  * Authors: Antoine Mandin
  */
@@ -15,7 +15,11 @@ public class ClientSendingThread extends Thread {
   private PrintStream socOut = null;
   private ConnectionFinishListener listener;
 
-  public ClientSendingThread(Socket echoSocket, ConnectionFinishListener listener) throws IOException {
+  public ClientSendingThread(
+    Socket echoSocket,
+    ConnectionFinishListener listener
+  )
+    throws IOException {
     socOut = new PrintStream(echoSocket.getOutputStream());
     stdIn = new BufferedReader(new InputStreamReader(System.in));
     this.listener = listener;
@@ -33,10 +37,8 @@ public class ClientSendingThread extends Thread {
       }
       socOut.close();
       stdIn.close();
-    } catch (IOException exc) {
-      exc.printStackTrace();
-    }
-    if(listener != null){
+    } catch (IOException exc) {}
+    if (listener != null) {
       listener.onConnectionFinish();
     }
   }
