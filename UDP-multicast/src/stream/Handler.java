@@ -3,7 +3,7 @@ package stream;
 /**
  * Interface gérant les messages reçus
  **/
-public class Handler {
+public interface Handler {
 
   /**
    * Appelé lors de la reception d'un message
@@ -15,7 +15,7 @@ public class Handler {
    * Appelé lors de la reception d'une connexion
    * @param name nom du client qui se connecte
    **/
-  void onConnect(Stirng name);
+  void onConnect(String name);
 
   /**
    * Appelé lors de la reception d'une déconnexion
