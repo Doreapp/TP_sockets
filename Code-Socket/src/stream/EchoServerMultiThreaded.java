@@ -17,6 +17,7 @@ public class EchoServerMultiThreaded
   private ServerSocket listenSocket;
   private List<PrintStream> clientOuts = new ArrayList<PrintStream>();
   private List<String> clientNames = new ArrayList<String>();
+  private List<String> history = new ArrayList<String>();
 
   /**
    * main method
@@ -47,6 +48,7 @@ public class EchoServerMultiThreaded
   }
 
   public void handle(String message) {
+    history.add(message);
     for (int i = 0; i < clientOuts.size(); i++) {
       clientOuts.get(i).println(message);
     }
@@ -81,6 +83,9 @@ public class EchoServerMultiThreaded
       names += "Welcome in the chat. You're the first one !";
     }
     socOut.println(names);
+
+    for(String s : history)
+      socOut.println(s);
 
     clientNames.add(name);
     clientOuts.add(socOut);
