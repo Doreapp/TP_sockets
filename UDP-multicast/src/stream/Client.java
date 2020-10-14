@@ -1,11 +1,15 @@
 package stream;
 
-public class Client implements Sender {
+import java.io.*;
+import java.net.*;
+
+public class Client implements Sender, Handler {
   private String name = "unnamed";
   private MulticastSocket groupSocket = null;
   private InetAddress groupAddr;
   private int groupPort;
   private SendingThread sendingThread;
+  private ListeningThread listeningThread;
 
   public static void main(String[] args) {
     Client client = new Client("224.125.85.13", 1234);
@@ -21,7 +25,11 @@ public class Client implements Sender {
       // Join the group
       groupSocket.joinGroup(groupAddr);
 
-        //TODO creer le thread
+      sendingThread = new SendingThread(this);
+      listeningThread = new ListeningThread(groupSocket, this);
+
+      sendingThread.start();
+      listeningThread.start();
     } catch (Exception e) {
       System.out.println("Error in Client : " + e);
     }
@@ -29,6 +37,7 @@ public class Client implements Sender {
 
   @Override
   public void send(String message) {
+    log("send (" + message + ")");
     if (groupSocket == null) {
       System.out.println("Error in Client : send() with null groupSocket");
       return;
@@ -41,6 +50,7 @@ public class Client implements Sender {
 
   @Override
   public void disconnect() {
+    log("disconnect ");
     if (groupSocket == null) {
       System.out.println(
         "Error in Client : disconnect() with null groupSocket"
@@ -51,9 +61,46 @@ public class Client implements Sender {
     String formatedMessage = "." + name;
 
     sendMessage(formatedMessage);
+
+    close();
+  }
+
+  @Override
+  public void connect(String name) {
+    log("connect(" + name + ")");
+    this.name = name;
+
+    String formatedMessage = ";" + name;
+
+    sendMessage(formatedMessage);
+  }
+
+  @Override
+  public void onMessage(String message) {
+    showMessage(message);
+  }
+
+  @Override
+  public void onConnect(String name) {
+    showMessage(name + " joined the chat.");
+  }
+
+  @Override
+  public void onDeconnect(String name) {
+    showMessage(name + " left the chat.");
+  }
+
+  private void log(String msg) {
+    //System.out.println("[LOG] Client : " + msg);
+  }
+
+  private void showMessage(String message) {
+    // Pour l'instant affiche sur la console ...
+    System.out.println("> " + message);
   }
 
   private void sendMessage(String msg) {
+    log("send message : " + msg);
     if (groupSocket == null) {
       System.out.println(
         "Error in Client : sendMessage() with null groupSocket"
@@ -68,15 +115,15 @@ public class Client implements Sender {
       groupPort
     );
 
-    groupSocket.send(packet);
+    try {
+      groupSocket.send(packet);
+    } catch (IOException e) {
+      System.out.println("Error in Client, Socket.send : " + e);
+    }
   }
 
-  @Override
-  public void connect(String name) {
-    this.name = name;
-
-    String formatedMessage = ";" + name;
-
-    sendMessage(formatedMessage);
+  private void close(){
+    listeningThread.close();
+    groupSocket.close();
   }
 }
