@@ -75,7 +75,7 @@ public class Client implements Sender {
   public void connect(String name) {
     this.name = name;
 
-    String formatedMessage = name + " entered in the chat";
+    String formatedMessage = ";" + name;
 
     sendMessage(formatedMessage);
   }
