@@ -11,13 +11,13 @@ import java.io.*;
 import java.net.*;
 
 /**
- * Classe Thread, côté client, écoutant les messages arrivant du serveur  
+ * Classe Thread, côté client, écoutant les messages arrivant du serveur
  **/
 public class ClientListeningThread extends Thread {
   // Stream reader des message arrivant du Serveur
   private BufferedReader socIn = null;
 
-  // Interface gérant les messages entrant 
+  // Interface gérant les messages entrant
   private Handler handler;
 
   // Booleén pour le thread, indiquant s'il doit stopper son exécution
@@ -27,7 +27,7 @@ public class ClientListeningThread extends Thread {
    * Constructeur de la classe
    * @params echoSocket socket représentant la connection avec le serveur
    * @params handler interface gérant les messages reçus
-   * @throws IOException erreurs pouvant venir du socket 
+   * @throws IOException erreurs pouvant venir du socket
    **/
   public ClientListeningThread(Socket echoSocket, Handler handler)
     throws IOException {
@@ -48,7 +48,9 @@ public class ClientListeningThread extends Thread {
         line = socIn.readLine();
 
         if (handler != null) {
-          handler.handle(line);
+          synchronized (handler) {
+            handler.handle(line);
+          }
         }
       }
       close();
