@@ -1,23 +1,14 @@
-/***
- * EchoServer
- * Example of a TCP server
- * Date: 10/01/04
- * Authors:
- */
-
 package stream;
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class EchoServerMultiThreaded
   implements Handler, ClientConnectionListener {
   private ServerSocket listenSocket;
   private List<PrintStream> clientOuts = new ArrayList<PrintStream>();
   private List<String> clientNames = new ArrayList<String>();
-  private List<String> history = new ArrayList<String>();
 
   /**
    * main method
@@ -48,7 +39,14 @@ public class EchoServerMultiThreaded
   }
 
   public void handle(String message) {
-    history.add(message);
+    try{
+      FileWriter historyWriter = new FileWriter("../saves/chat.txt", true);
+      historyWriter.write(message+"\n");
+      historyWriter.close();
+    }catch(IOException e){
+      System.out.println("Erreur d'écriture dans le fichier de sauvegarde !");
+      System.out.println(e);
+    }
     for (int i = 0; i < clientOuts.size(); i++) {
       clientOuts.get(i).println(message);
     }
@@ -84,8 +82,19 @@ public class EchoServerMultiThreaded
     }
     socOut.println(names);
 
-    for(String s : history)
-      socOut.println(s);
+    // Envoi de tous les messages précédents
+    try {
+      File myObj = new File("../saves/chat.txt");
+      Scanner myReader = new Scanner(myObj);
+      while (myReader.hasNextLine()) {
+        String data = myReader.nextLine();
+        socOut.println(data);
+      }
+      myReader.close();
+    } catch (FileNotFoundException e) {
+      System.out.println("An error occurred.");
+      e.printStackTrace();
+    }
 
     clientNames.add(name);
     clientOuts.add(socOut);
