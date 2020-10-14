@@ -39,7 +39,9 @@ public class ClientSendingThread extends Thread {
       stdIn.close();
     } catch (IOException exc) {}
     if (listener != null) {
-      listener.onConnectionFinish();
+      synchronized (listener) {
+        listener.onConnectionFinish();
+      }
     }
   }
 }

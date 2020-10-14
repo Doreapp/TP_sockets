@@ -20,7 +20,8 @@ public class ClientThread extends Thread {
     Socket clientSocket,
     Handler handler,
     ClientConnectionListener clientConnectionListener
-  ) throws IOException {
+  )
+    throws IOException {
     this.handler = handler;
     this.clientConnectionListener = clientConnectionListener;
     this.socIn =
@@ -30,27 +31,32 @@ public class ClientThread extends Thread {
 
   /**
    * receives a request from client then sends an echo to the client
-   *  
+   *
    **/
   public void run() {
     try {
       //Read the client name
       final String clientName = socIn.readLine();
-      clientConnectionListener.onConnect(socOut, clientName);
+      synchronized (clientConnectionListener) {
+        clientConnectionListener.onConnect(socOut, clientName);
+      }
       handler.handle(clientName + " join the chat !");
 
       while (true) {
         String line = socIn.readLine();
         if (line == null) {
-          clientConnectionListener.onDisconnect(socOut, clientName);
+          synchronized (clientConnectionListener) {
+            clientConnectionListener.onDisconnect(socOut, clientName);
+          }
           break; // The client disconnected
         }
-        handler.handle(clientName + " : " + line);
+        synchronized (handler) {
+          handler.handle(clientName + " : " + line);
+        }
       }
 
       socIn.close();
       socOut.close();
-    } catch (Exception e) {
-    }
+    } catch (Exception e) {}
   }
 }
