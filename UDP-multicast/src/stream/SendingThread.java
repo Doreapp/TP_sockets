@@ -25,6 +25,11 @@ public class SendingThread extends Thread {
     this.sender = sender;
   }
 
+  /**
+   * Méthode principale du thread
+   * Ecoute les entrées sur la console
+   * puis les traite (. = se déconnecter par exemple)
+   **/
   @Override
   public void run() {
     try {
@@ -54,6 +59,10 @@ public class SendingThread extends Thread {
     }
   }
 
+  /**
+  * Fait en sorte que le Thread se termine "proprement"
+  * = arrête la boucle while
+  */
   public void close() {
     exit = true;
   }

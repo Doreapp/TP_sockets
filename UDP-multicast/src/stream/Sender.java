@@ -11,12 +11,12 @@ public interface Sender {
   void send(String message);
 
   /**
-   * appelé lors de la deconnexion, pour partager l'information sur le réseau
+   * Appelée lors de la deconnexion, pour partager l'information sur le réseau
    **/
   void disconnect();
 
   /**
-   * appelé lors de la connexion pour indiquer le nom au client (controleur)
+   * Appelée lors de la connexion pour indiquer le nom au client (controleur)
    * @param name nom du client
    **/
   void connect(String name);
