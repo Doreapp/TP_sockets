@@ -1,24 +1,21 @@
-/***
- * EchoClient
- * Example of a TCP client
- * Date: 10/01/04
- * Authors:
- */
 package stream;
 
 import java.io.*;
 import java.net.*;
 
+/**
+ * Classe du client, gérant la connexion et les messages reçus
+ */
 public class EchoClient implements Handler, ConnectionFinishListener {
   private Socket echoSocket = null;
   private ClientSendingThread sendingThread = null;
   private ClientListeningThread listeningThread = null;
 
   /**
-   *  main method
-   *  accepts a connection, receives a message from client then sends an echo to the client
+   *  Méthode principale
+   * @param args options d'entrée console
    **/
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     if (args.length != 2) {
       System.out.println(
         "Usage: java EchoClient <EchoServer host> <EchoServer port>"
@@ -28,7 +25,12 @@ public class EchoClient implements Handler, ConnectionFinishListener {
     EchoClient client = new EchoClient(args[0], args[1]);
   }
 
-  public EchoClient(String host, String port) throws IOException {
+  /**
+   * Constructeur
+   * @param host hôte de la connexion (ex: localhost)
+   * @param port port de la connexion
+   */
+  public EchoClient(String host, String port){
     try {
       // creation socket ==> connexion
       echoSocket = new Socket(host, new Integer(port).intValue());
@@ -47,6 +49,10 @@ public class EchoClient implements Handler, ConnectionFinishListener {
     }
   }
 
+  /**
+   * callback appelé lorsque la connexion se termine
+   * Arrête le thread d'écoute des messages venant du serveret ferme la socket
+   */
   @Override
   public void onConnectionFinish() {
     try {
@@ -58,6 +64,10 @@ public class EchoClient implements Handler, ConnectionFinishListener {
     }
   }
 
+  /**
+   * Callback appelé à la reception d'un message
+   * Affiche le message sur la console
+   */
   public void handle(String message) {
     System.out.println("> " + message);
   }

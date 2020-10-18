@@ -4,6 +4,10 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+/**
+ * Serveur
+ * Gère les connexion, déconnexion et conversations entre clients
+ */
 public class EchoServerMultiThreaded
   implements Handler, ClientConnectionListener {
   private ServerSocket listenSocket;
@@ -11,13 +15,10 @@ public class EchoServerMultiThreaded
   private List<String> clientNames = new ArrayList<String>();
 
   /**
-   * main method
-   *
-   * @param EchoServer
-   *            port
-   *
+   * méthode principale
+   * @param args options de l'entrée console
    **/
-  public static void main(String args[]) throws IOException {
+  public static void main(String args[]){
     if (args.length != 1) {
       System.out.println("Usage: java EchoServer <EchoServer port>");
       System.exit(1);
@@ -25,7 +26,11 @@ public class EchoServerMultiThreaded
     EchoServerMultiThreaded server = new EchoServerMultiThreaded(args[0]);
   }
 
-  public EchoServerMultiThreaded(String port) throws IOException {
+  /**
+   * Constructeur du serveur
+   * @param port port de la connexion
+   */
+  public EchoServerMultiThreaded(String port){
     try {
       listenSocket = new ServerSocket(Integer.parseInt(port)); // port
       System.out.println("Server ready...");
@@ -38,12 +43,18 @@ public class EchoServerMultiThreaded
     } catch (Exception e) {}
   }
 
+  /**
+   * Callback appelé à la reception d'un message
+   * Enregistre le message dans l'historique et l'envoi à l'ensemble des clients
+   * @param message message reçu
+   */
+  @Override
   public void handle(String message) {
-    try{
+    try {
       FileWriter historyWriter = new FileWriter("../saves/chat.txt", true);
-      historyWriter.write(message+"\n");
+      historyWriter.write(message + "\n");
       historyWriter.close();
-    }catch(IOException e){
+    } catch (IOException e) {
       System.out.println("Erreur d'écriture dans le fichier de sauvegarde !");
       System.out.println(e);
     }
@@ -52,6 +63,12 @@ public class EchoServerMultiThreaded
     }
   }
 
+  /**
+   * Callback appelé à la deconnexion d'un client
+   * Arrête l'écoute de sa socket et prévient les autres clients
+   * @param socOut socket affiliée au client
+   * @param name nom du client
+   */
   @Override
   public void onDisconnect(PrintStream socOut, String name) {
     for (int i = 0; i < clientOuts.size(); i++) {
@@ -64,6 +81,15 @@ public class EchoServerMultiThreaded
     handle(name + " has left !");
   }
 
+  /**
+   * Callback appelé lors de la connexion d'un client
+   * Enregistre son arrivé et son nom
+   * Prévient le nouveau client des membres présents dans le chat
+   * Prévient les autres client de son arrivée
+   * Affiche l'historique des messages au nouveau client
+   * @param socOut socket affiliée au client
+   * @param name nom du client
+   */
   @Override
   public void onConnect(PrintStream socOut, String name) {
     String names = "[Console] : ";

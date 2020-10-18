@@ -1,10 +1,3 @@
-/***
- * ClientListeningThread
- * Thread listening for informations and displaying it on console
- * Date: 12/10/20
- * Authors: Antoine Mandin
- */
-
 package stream;
 
 import java.io.*;
@@ -25,8 +18,8 @@ public class ClientListeningThread extends Thread {
 
   /**
    * Constructeur de la classe
-   * @params echoSocket socket représentant la connection avec le serveur
-   * @params handler interface gérant les messages reçus
+   * @param echoSocket socket représentant la connection avec le serveur
+   * @param handler interface gérant les messages reçus
    * @throws IOException erreurs pouvant venir du socket
    **/
   public ClientListeningThread(Socket echoSocket, Handler handler)
@@ -57,6 +50,10 @@ public class ClientListeningThread extends Thread {
     } catch (IOException e) {}
   }
 
+  /**
+   * Arrête le thread et ferme la socket
+   * @throws IOException erreur pouvant être provoquer par la fermeture de la socket
+   */
   public void close() throws IOException {
     exit = true;
     socIn.close();
