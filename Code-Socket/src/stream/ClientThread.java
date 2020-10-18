@@ -1,21 +1,25 @@
-/***
- * ClientThread
- * Example of a TCP server
- * Date: 14/12/08
- * Authors:
- */
-
 package stream;
 
 import java.io.*;
 import java.net.*;
 
+/**
+ * Thread côté serveur écoutant les messages venant des clients
+ * et notifiant le "controlleur" du serveur de ceux ci
+ */
 public class ClientThread extends Thread {
   private BufferedReader socIn = null;
   private PrintStream socOut = null;
   private Handler handler;
   private ClientConnectionListener clientConnectionListener;
 
+  /**
+   * Constructeur
+   * @param clientSocket socket de connection avec le client affilié
+   * @param handler interface gérant les messages arrivant du client
+   * @param clientConnectionListener interface gérant la connexion (avec un nom) et déconnexion du client
+   * @throws IOException erreur provenant de la socket
+   */
   public ClientThread(
     Socket clientSocket,
     Handler handler,
@@ -30,8 +34,7 @@ public class ClientThread extends Thread {
   }
 
   /**
-   * receives a request from client then sends an echo to the client
-   *
+   * Recoit les messages du client et les interprète
    **/
   public void run() {
     try {
