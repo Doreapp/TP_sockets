@@ -122,7 +122,12 @@ public class HttpRequest {
     String firstLine = head.substring(0, endLine);
     String[] firstLineValues = firstLine.split(" ");
     res.put("Method", firstLineValues[0].trim());
-    res.put("Url", firstLineValues[1].trim());
+    if(firstLineValues[1].trim().indexOf('?') == -1){
+      res.put("Url", firstLineValues[1].trim());
+    }else{
+      res.put("Url", firstLineValues[1].trim().substring(0,firstLineValues[1].trim().indexOf('?')));
+      res.put("params",firstLineValues[1].trim().substring(firstLineValues[1].trim().indexOf('?')+1));
+    }
     res.put("Http-Version", firstLineValues[2].trim());
     String[] lines = head.split("\n");
     for (String line : lines) {
