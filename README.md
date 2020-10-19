@@ -26,6 +26,6 @@ Il contient la documentation et le code source
 
 ## TP-HTTP-Code
 
-Dossier lié au TP2 : HTTP
+Dossier lié au TP2 : ``HTTP``
 
 Il contient la documentation et le code source
