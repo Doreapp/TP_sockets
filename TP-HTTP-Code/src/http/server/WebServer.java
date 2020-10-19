@@ -2,24 +2,19 @@
 
 package http.server;
 
+import http.HttpRequest;
+import http.HttpResponse;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
 /**
- * Example program from Chapter 1 Programming Spiders, Bots and Aggregators in
- * Java Copyright 2001 by Jeff Heaton
- *
- * WebServer is a very simple web-server. Any request is responded with a very
- * simple web-page.
- *
- * @author Jeff Heaton
- * @version 1.0
+ * Web Server handling HTTP requests
  */
 public class WebServer {
-  private PrintWriter out;
-  private static final String FILES_ROOT = "../";
+  private static final String FILES_ROOT = "../doc/";
+  private static final int PORT = 3000;
 
   /**
    * WebServer constructor.
@@ -27,41 +22,62 @@ public class WebServer {
   protected void start() {
     ServerSocket s;
 
-    System.out.println("Webserver starting up on port 3000");
+    System.out.println("Webserver starting up on port " + PORT);
     System.out.println("(press ctrl-c to exit)");
     try {
       // create the main server socket
-      s = new ServerSocket(3000);
+      s = new ServerSocket(PORT);
     } catch (Exception e) {
       System.out.println("Error: " + e);
       e.printStackTrace();
       return;
     }
 
-    System.out.println("Waiting for connection");
+    log("** Waiting for connection **");
     for (;;) {
       try {
         // wait for a connection
         Socket remote = s.accept();
         // remote is now the connected socket
-        System.out.println("Connection, sending data.");
-        BufferedReader in = new BufferedReader(
-          new InputStreamReader(remote.getInputStream())
+        log("Connection found");
+
+        BufferedOutputStream out = new BufferedOutputStream(
+          remote.getOutputStream()
         );
-        out = new PrintWriter(remote.getOutputStream());
 
-        String str = ".";
-        String request = "";
-        while (str != null && !str.equals("")) {
-          str = in.readLine();
-          request += str + "\n";
+        HttpRequest request = HttpRequest.read(remote.getInputStream());
+        if (request != null) {
+          log("Request : " + request);
+          HttpResponse response = handleRequest(request);
+          if (response != null) {
+            log("Response : " + response);
+            String toSend = response.getHeader();
+
+            System.out.print(toSend);
+            out.write(toSend.getBytes());
+
+            try {
+              response.sendFile(out);
+            } catch (IOException e) {
+              System.out.println(
+                "Exception thrown while sending file : " + e.getMessage()
+              );
+            }
+            try {
+              out.flush();
+            } catch (IOException e) {
+              System.out.println(
+                "Exception thrown while flushing : " + e.getMessage()
+              );
+            }
+          }
+        } else {
+          continue;
         }
-        handleRequest(request);
 
-        out.flush();
         remote.close();
       } catch (Exception e) {
-        System.out.println("Error: " + e);
+        log("Error: " + e);
         e.printStackTrace();
       }
     }
@@ -77,171 +93,167 @@ public class WebServer {
     ws.start();
   }
 
-  public void handleRequest(String request) {
-    log("REQUEST : " + request + "\n\n");
-    if (request == null || request.trim().equals("null")) return;
-
-    int delimitation = request.indexOf("\n\n");
-    String head;
-    String body;
-    if (delimitation > 0) {
-      head = request.substring(0, delimitation);
-      body = request.substring(delimitation).trim();
-    } else {
-      head = request;
-      body = "";
-    }
-
-    Map<String, String> headValues = readHead(head);
-    readBody(body);
-
-    System.out.println("--- start HEAD MAP --- ");
-    for (String key : headValues.keySet()) {
-      System.out.println(key + " : " + headValues.get(key));
-    }
-    System.out.println("--- end HEAD MAP --- \n");
-
-    switch (headValues.get("Method")) {
-      case "GET":
-        handleGetRequest(headValues, request.substring(4));
-        break;
-      case "POST":
-        handlePostRequest(headValues, request.substring(4));
-        break;
-      case "HEAD":
-        handleHeadRequest(headValues, request.substring(4));
-        break;
-      case "PUT":
-        handlePutRequest(headValues, request.substring(4));
-        break;
-      case "DELETE":
-        handleDeleteRequest(headValues, request.substring(4));
-        break;
+  /**
+   * Interprete une requête quelconque
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handleRequest(HttpRequest request) {
+    switch (request.getMethod()) {
+      case GET:
+        return handleGetRequest(request);
+      case POST:
+        return handlePostRequest(request);
+      case HEAD:
+        return handleHeadRequest(request);
+      case PUT:
+        return handlePutRequest(request);
+      case DELETE:
+        return handleDeleteRequest(request);
+      case UNKNOWN:
       default:
-        System.out.println("unhandled type of request : " + request);
+        log("unhandled type of request : " + request);
+        return null;
     }
   }
 
-  public void handleGetRequest(Map<String, String> headValues, String request) {
-    log("handleGet");
-    //System.out.println("handle GET request : " + request);
-    String url = headValues.get("Url");
-    File file = getFile(url);
-    if (file == null) {
-      sendFileNotFound();
+  /**
+   * Interprete une requête GET : retourne un fichier
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handleGetRequest(HttpRequest request) {
+    File file = getFile(request.getUrl());
+    if (file == null || !file.exists() || !file.isFile()) {
+      return HttpResponse.responseNotFound();
     } else {
-      String content = readFile(file);
-      if (content == null) {
-        sendFileNotFound();
+      HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
+      response.findContentType(request.getUrl());
+      response.setContentLength(file.length());
+      response.setFileToSend(file);
+      return response;
+    }
+  }
+
+  /**
+   * Interprete une requête POST : ajoute des informations
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handlePostRequest(HttpRequest request) {
+    File file = getFile(request.getUrl());
+    if (file.exists() && !file.isFile()) {
+      return new HttpResponse(HttpResponse.Code.SC_BAD_REQUEST);
+    } else {
+      boolean fileExisted = file.exists();
+      boolean ok = writeToFile(file, request.getBody(), true);
+      if (!ok) {
+        return new HttpResponse(HttpResponse.Code.SC_NOT_MODIFIED);
+      } else if (fileExisted) {
+        return new HttpResponse(HttpResponse.Code.SC_OK);
       } else {
-        printHeader(out, "200 OK", "text/html");
-        out.println(content);
+        return new HttpResponse(HttpResponse.Code.SC_CREATED);
       }
     }
   }
 
-  private void sendFileNotFound() {
-    printHeader(out, "404", null);
-    System.out.println("file not found");
+  /**
+   * Interprete une requête HEAD : donne les informations sur un fichier
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handleHeadRequest(HttpRequest request) {
+    //Same as GET without printing body
+    File file = getFile(request.getUrl());
+    if (file == null || !file.exists() || !file.isFile()) {
+      return HttpResponse.responseNotFound();
+    } else {
+      HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
+      response.findContentType(request.getUrl());
+      response.setContentLength(file.length());
+      response.setFileToSend(null); // don't send the file into a head request
+      return response;
+    }
   }
 
-  public void handlePostRequest(
-    Map<String, String> headValues,
-    String request
-  ) {
-    log("handle post");
-   
+  /**
+   * Interprete une requête PUT : modifie (écrase) des informations
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handlePutRequest(HttpRequest request) {
+    // Same as post without appending
 
-    String url = headValues.get("Url");
-    File file = getFile(url);
-    if (file == null) {
-      sendFileNotFound();
+    File file = getFile(request.getUrl());
+    if (file.exists() && !file.isFile()) {
+      return new HttpResponse(HttpResponse.Code.SC_BAD_REQUEST);
     } else {
-      String content = readFile(file);
-      if (content == null) {
-        sendFileNotFound();
+      boolean fileExisted = file.exists();
+      boolean ok = writeToFile(file, request.getBody(), false);
+      if (!ok) {
+        return new HttpResponse(HttpResponse.Code.SC_NOT_MODIFIED);
+      } else if (fileExisted) {
+        return new HttpResponse(HttpResponse.Code.SC_OK);
       } else {
-        printHeader(out, "200 OK", "text/html");
+        return new HttpResponse(HttpResponse.Code.SC_CREATED);
       }
     }
   }
 
-  public void handleHeadRequest(
-    Map<String, String> headValues,
-    String request
-  ) {
-    System.out.println("handle HEAD request : " + request);
-  }
-
-  public void handlePutRequest(Map<String, String> headValues, String request) {
-    System.out.println("handle PUT request : " + request);
-  }
-
-  public void handleDeleteRequest(
-    Map<String, String> headValues,
-    String request
-  ) {
-    System.out.println("handle DELETE request : " + request);
-  }
-
-  public static void printHeader(
-    PrintWriter out,
-    String code,
-    String contentType
-  ) {
-    out.println("HTTP/1.0 " + code);
-    if (contentType != null) out.println("Content-Type: " + contentType);
-    out.println("Server: Bot");
-    out.println("");
-  }
-
-  public static Map<String, String> readHead(String head) {
-    Map<String, String> res = new HashMap<>();
-    int endLine = head.indexOf("\n");
-    String firstLine = head.substring(0, endLine);
-    String[] firstLineValues = firstLine.split(" ");
-    res.put("Method", firstLineValues[0].trim());
-    res.put("Url", firstLineValues[1].trim());
-    res.put("Http-Version", firstLineValues[2].trim());
-    String[] lines = head.split("\n");
-    for (String line : lines) {
-      String[] values = line.split(": ");
-      if (values.length == 2) res.put(values[0], values[1]);
+  /**
+   * Interprete une requête DELETE : supprime un fichier
+   * @param request Requête à interpréter
+   * @return La réponse lié à la requête (peut être null)
+   */
+  public HttpResponse handleDeleteRequest(HttpRequest request) {
+    File file = getFile(request.getUrl());
+    if (file == null || !file.exists() || !file.isFile()) {
+      return HttpResponse.responseNotFound();
+    } else {
+      if (file.delete()) {
+        return new HttpResponse(HttpResponse.Code.SC_OK);
+      } else {
+        return new HttpResponse(HttpResponse.Code.SC_NOT_MODIFIED);
+      }
     }
-    return res;
   }
 
+  /**
+   * Retrouve un fichier via une url
+   * @param url url, entrée, du fichier recherché
+   * @return le fichier, jamais null
+   */
   public static File getFile(String url) {
     String formatedUrl = FILES_ROOT + url;
-    File file = new File(formatedUrl);
 
-    System.out.println("GET request url : " + formatedUrl);
-    if (!file.exists()) {
-      return null;
-    } else {
-      return file;
+    return new File(formatedUrl);
+  }
+
+  /**
+   * Ecrit dans un fichier
+   * @param file Fichier dans lequel écrire
+   * @param value texte à écrire dans le fichier
+   * @param append on ajoute le texte à la fin ou on écrase tout (true pour ajouter)
+   * @return si le fichier à bien été modifier
+   */
+  public static boolean writeToFile(File file, String value, boolean append) {
+    try (
+      FileWriter fw = new FileWriter(file, append);
+      BufferedWriter bw = new BufferedWriter(fw);
+      PrintWriter out = new PrintWriter(bw)
+    ) {
+      out.println(value);
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
     }
   }
 
-  public static String readFile(File file) {
-    try {
-      String res = "";
-      Scanner myReader = new Scanner(file);
-      while (myReader.hasNextLine()) {
-        res += myReader.nextLine() + "\n";
-      }
-      myReader.close();
-      return res;
-    } catch (FileNotFoundException e) {
-      return null;
-    }
-  }
-
-  public static String readBody(String body) {
-    log("read body : " + body);
-    return body;
-  }
-
+  /**
+   * Ecrit un message sur la console (précédé de [LOG])
+   * A utiliser pour comprendre le comportement du server
+   */
   public static void log(String msg) {
     System.out.println("[LOG] " + msg);
   }
