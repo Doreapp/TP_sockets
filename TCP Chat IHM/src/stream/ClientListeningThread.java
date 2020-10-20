@@ -57,6 +57,10 @@ public class ClientListeningThread extends Thread {
     } catch (IOException e) {}
   }
 
+  /**
+   * Arrête le thread et ferme la socket
+   * @throws IOException erreur pouvant être provoquer par la fermeture de la socket
+   */
   public void close() throws IOException {
     exit = true;
     socIn.close();
