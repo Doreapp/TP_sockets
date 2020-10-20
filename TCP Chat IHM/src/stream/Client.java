@@ -122,7 +122,8 @@ public class Client extends JFrame
        }
 
        /**
-        * main method
+        * main methode
+        * @param args options en ligne de commande (inutiles ici)
        **/
        public static void main(String[] args)
        {

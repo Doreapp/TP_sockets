@@ -25,8 +25,8 @@ public class ClientListeningThread extends Thread {
 
   /**
    * Constructeur de la classe
-   * @params echoSocket socket représentant la connection avec le serveur
-   * @params handler interface gérant les messages reçus
+   * @param echoSocket socket représentant la connection avec le serveur
+   * @param handler interface gérant les messages reçus
    * @throws IOException erreurs pouvant venir du socket
    **/
   public ClientListeningThread(Socket echoSocket, Handler handler)

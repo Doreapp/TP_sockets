@@ -1,8 +1,8 @@
 package http;
 
+import http.server.WebServer;
 import java.io.*;
 import java.util.*;
-import http.server.WebServer;
 
 /**
  * Représente une réponse HTTP
@@ -34,6 +34,10 @@ public class HttpResponse {
    */
   public static HttpResponse responseNotFound() {
     return new HttpResponse(Code.SC_NOT_FOUND);
+  }
+
+  public String getContentType() {
+    return contentType;
   }
 
   // Setters
@@ -96,7 +100,7 @@ public class HttpResponse {
         contentType = "text/html";
       } else if (Arrays.asList(videoExt).contains(extension)) {
         contentType = "video/" + extension;
-      } else if (extension.equals("exe")){
+      } else if (extension.equals("exe")) {
         contentType = "text/json";
       }
     }
@@ -128,7 +132,7 @@ public class HttpResponse {
 
     if (fileToSend == null && stringToSend == null) {
       return;
-    } else if (fileToSend != null && stringToSend == null){
+    } else if (fileToSend != null && stringToSend == null) {
       if (!fileToSend.isFile()) {
         String toSend = "";
         toSend += "<h1>Files in root</h1>\n";
@@ -159,8 +163,8 @@ public class HttpResponse {
         );
         is.close();
       }
-    } else if (fileToSend == null && stringToSend != null){
-      os.write(stringToSend.getBytes()); 
+    } else if (fileToSend == null && stringToSend != null) {
+      os.write(stringToSend.getBytes());
     } else {
       System.out.println("Erreur trop de fichiers d'envoi spécifiés");
     }

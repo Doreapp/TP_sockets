@@ -18,7 +18,7 @@ public class EchoServerMultiThreaded
    * méthode principale
    * @param args options de l'entrée console
    **/
-  public static void main(String args[]) throws IOException {
+  public static void main(String args[]) {
     if (args.length != 1) {
       System.out.println("Usage: java EchoServer <EchoServer port>");
       System.exit(1);
@@ -30,7 +30,7 @@ public class EchoServerMultiThreaded
    * Constructeur du serveur
    * @param port port de la connexion
    */
-  public EchoServerMultiThreaded(String port) throws IOException {
+  public EchoServerMultiThreaded(String port){
     try {
       listenSocket = new ServerSocket(Integer.parseInt(port)); // port
       System.out.println("Server ready...");

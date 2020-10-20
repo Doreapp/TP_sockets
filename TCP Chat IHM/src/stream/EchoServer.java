@@ -37,8 +37,7 @@ public class EchoServer {
 
   /**
    * main method
-   * @param EchoServer port
-   *
+   * @param args options en ligne de commande (port du server)
    **/
   public static void main(String args[]) {
     ServerSocket listenSocket;

@@ -25,9 +25,8 @@ public class EchoClient implements Handler, ConnectionFinishListener {
    * @param port port de la connexion
    * @param name surnom retenu pour le chat
    * @param chat contenant du chat du client
-   * @throws IOException
    */
-  public EchoClient(String host, String port, String name, JTextPane chat) throws IOException {
+  public EchoClient(String host, String port, String name, JTextPane chat) {
     try {
       this.chat = chat;
       // creation socket ==> connexion
@@ -64,6 +63,7 @@ public class EchoClient implements Handler, ConnectionFinishListener {
   /**
    * Callback appelé à la reception d'un message
    * Affiche le message dans le chat
+   * @param message message reçu
    */
   public void handle(String message) {
     String fil = chat.getText();
@@ -73,6 +73,7 @@ public class EchoClient implements Handler, ConnectionFinishListener {
 
    /**
    * Demande l'envoi du message transmit par l'IHM
+   * @param message message à envoyer
    */
    public void sendMessage(String message){
       sendingThread.sendMessage(message);

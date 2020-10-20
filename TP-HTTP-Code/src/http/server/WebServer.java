@@ -124,7 +124,8 @@ public class WebServer {
       return HttpResponse.responseNotFound();
     } else {
       HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
-      if(request.getContentType().equals("application/exe")){
+      response.findContentType(request.getUrl());
+      if("text/json".equals(response.getContentType())){
         int exitValue=1;
         String stdout = "";
         String stderr = "";
@@ -152,7 +153,6 @@ public class WebServer {
         catch (InterruptedException e) {
           e.printStackTrace();
         }
-        response.findContentType(request.getUrl());
         String answer = "{\n  \"exitValue\":\""+exitValue+"\",\n  \"stdout\":\""+stdout+"\",\n  \"stderr\":\""+stderr+"\"\n}";
         response.setContentLength(answer.length());
         response.setStringToSend(answer);
