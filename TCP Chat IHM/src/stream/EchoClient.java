@@ -10,12 +10,23 @@ import java.io.*;
 import java.net.*;
 import javax.swing.JTextPane;
 
+/**
+ * Classe du client, gérant la connexion et les messages reçus
+ */
 public class EchoClient implements Handler, ConnectionFinishListener {
   private Socket echoSocket = null;
   private ClientSendingThread sendingThread = null;
   private ClientListeningThread listeningThread = null;
   private JTextPane chat = null;
 
+  /**
+   * Constructeur
+   * @param host hôte de la connexion (ex: localhost)
+   * @param port port de la connexion
+   * @param name surnom retenu pour le chat
+   * @param chat contenant du chat du client
+   * @throws IOException
+   */
   public EchoClient(String host, String port, String name, JTextPane chat) throws IOException {
     try {
       this.chat = chat;
@@ -35,6 +46,10 @@ public class EchoClient implements Handler, ConnectionFinishListener {
     }
   }
 
+  /**
+   * callback appelé lorsque la connexion se termine
+   * Arrête le thread d'écoute des messages venant du serveret ferme la socket
+   */
   @Override
   public void onConnectionFinish() {
     try {
@@ -46,16 +61,19 @@ public class EchoClient implements Handler, ConnectionFinishListener {
     }
   }
 
+  /**
+   * Callback appelé à la reception d'un message
+   * Affiche le message dans le chat
+   */
   public void handle(String message) {
-    addChat("> "+message);
+    String fil = chat.getText();
+    fil += '\n'+message;
+    chat.setText(fil);
   }
 
-  private void addChat(String message){
-      String fil = chat.getText();
-      fil += '\n'+message;
-      chat.setText(fil);
-   }
-
+   /**
+   * Demande l'envoi du message transmit par l'IHM
+   */
    public void sendMessage(String message){
       sendingThread.sendMessage(message);
    }

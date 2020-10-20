@@ -7,6 +7,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 
+/**
+ * Classe qui gère toute l'interface graphique
+ **/
 public class Client extends JFrame
 {
        JTextField hostname = new JTextField(10);
@@ -18,6 +21,11 @@ public class Client extends JFrame
        EchoClient echoClient;
        String nickname;
 
+
+       /**
+        * Constructeur 
+        * Génère l'interface graphique et appel EchoClient qui initialisera la connection au serveur
+       **/
        public Client()
        {
               setTitle("TCP CHAT");
@@ -31,7 +39,6 @@ public class Client extends JFrame
 
               JPanel topPanel = new JPanel();
               topPanel.setLayout(new FlowLayout(FlowLayout.CENTER,15,5));
-              // topPanel.setBackground(Color.ORANGE);
 
               JLabel labelHostName = new JLabel("HostName : ");
               JLabel labelPort = new JLabel("Port : ");
@@ -72,12 +79,9 @@ public class Client extends JFrame
               // Middle Panel ====================================
 
               JPanel middlePanel = new JPanel();
-              // middlePanel.setBackground(Color.GREEN);
 
               chat.setPreferredSize(new Dimension(700, 500));
               chat.setEditable(false);
-              // chat.setLineWrap(true);
-              // chat.setWrapStyleWord(true);
 
               JScrollPane scrollPane = new JScrollPane (chat);
 
@@ -88,7 +92,6 @@ public class Client extends JFrame
               // Bottom Panel ===================================
 
               JPanel bottomPanel = new JPanel();
-              // bottomPanel.setBackground(Color.RED);
               
 
               scanner.addActionListener(new ActionListener()
@@ -118,11 +121,18 @@ public class Client extends JFrame
               pack();
        }
 
+       /**
+        * main method
+       **/
        public static void main(String[] args)
        {
              Client t = new Client();
        }
 
+       /**
+        * Met à jour le text chat pour ajouter le message passé en paramètre
+        * @param message le message à ajouter
+       **/
        private void addChat(String message){
        		String fil = chat.getText();
        		fil += '\n'+message;
