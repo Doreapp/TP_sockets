@@ -1,5 +1,3 @@
-///A Simple Web Server (WebServer.java)
-
 package http.server;
 
 import http.HttpRequest;
@@ -12,22 +10,22 @@ import java.util.stream.*;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Web Server handling HTTP requests
+ * Web Server gérant des requêtes HTTP
  */
 public class WebServer {
   private static final String FILES_ROOT = "../doc/";
   private static final int PORT = 3000;
 
   /**
-   * WebServer constructor.
+   * Lance le Web server
    */
   protected void start() {
+    log("start");
     ServerSocket s;
 
     System.out.println("Webserver starting up on port " + PORT);
     System.out.println("(press ctrl-c to exit)");
     try {
-      // create the main server socket
       s = new ServerSocket(PORT);
     } catch (Exception e) {
       System.out.println("Error: " + e);
@@ -37,6 +35,7 @@ public class WebServer {
 
     log("** Waiting for connection **");
     for (;;) {
+      log("for enter");
       try {
         // wait for a connection
         Socket remote = s.accept();
@@ -55,22 +54,17 @@ public class WebServer {
             log("Response : " + response);
             String toSend = response.getHeader();
 
-            System.out.print(toSend);
             out.write(toSend.getBytes());
 
             try {
               response.sendFile(out);
             } catch (IOException e) {
-              System.out.println(
-                "Exception thrown while sending file : " + e.getMessage()
-              );
+              log("Exception thrown while sending file : " + e.getMessage());
             }
             try {
               out.flush();
             } catch (IOException e) {
-              System.out.println(
-                "Exception thrown while flushing : " + e.getMessage()
-              );
+              log("Exception thrown while flushing : " + e.getMessage());
             }
           }
         } else {
@@ -79,16 +73,16 @@ public class WebServer {
 
         remote.close();
       } catch (Exception e) {
-        log("Error: " + e);
+        log("Main Error: " + e);
         e.printStackTrace();
       }
     }
   }
 
   /**
-   * Start the application.
+   * Commence l'application
    *
-   * @param args Command line parameters are not used.
+   * @param args paramètres de ligne de commande. Inutiles ici.
    */
   public static void main(String args[]) {
     WebServer ws = new WebServer();
@@ -126,7 +120,7 @@ public class WebServer {
    */
   public HttpResponse handleGetRequest(HttpRequest request) {
     File file = getFile(request.getUrl());
-    if (file == null || !file.exists() || !file.isFile()) {
+    if (file == null || !file.exists()) {
       return HttpResponse.responseNotFound();
     } else {
       HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
@@ -162,9 +156,11 @@ public class WebServer {
         String answer = "{\n  \"exitValue\":\""+exitValue+"\",\n  \"stdout\":\""+stdout+"\",\n  \"stderr\":\""+stderr+"\"\n}";
         response.setContentLength(answer.length());
         response.setStringToSend(answer);
-      }else{
+      } else {
         response.findContentType(request.getUrl());
-        response.setContentLength(file.length());
+        if (file.isFile()) {
+          response.setContentLength(file.length());
+        }
         response.setFileToSend(file);
       }
       return response;
@@ -206,7 +202,9 @@ public class WebServer {
     } else {
       HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
       response.findContentType(request.getUrl());
-      response.setContentLength(file.length());
+      if (file.isFile()) {
+        response.setContentLength(file.length());
+      }
       response.setFileToSend(null); // don't send the file into a head request
       return response;
     }

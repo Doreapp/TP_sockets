@@ -2,6 +2,7 @@ package http;
 
 import java.io.*;
 import java.util.*;
+import http.server.WebServer;
 
 /**
  * Représente une réponse HTTP
@@ -81,7 +82,10 @@ public class HttpResponse {
   public void findContentType(String url) {
     contentType = "text/plain";
     int index = url.lastIndexOf(".");
-    if (index == -1) return;
+    if (index == -1) {
+      contentType = "text/html";
+      return;
+    }
     String extension = url.substring(index + 1);
     if (extension != null || extension.isEmpty()) {
       if (Arrays.asList(imageExt).contains(extension)) {
@@ -120,31 +124,46 @@ public class HttpResponse {
    * @param os Buffered Output Stream utilisé pour communiquer avec le client
    */
   public void sendFile(BufferedOutputStream os) throws IOException {
+    WebServer.log("Response.send");
+
     if (fileToSend == null && stringToSend == null) {
       return;
     } else if (fileToSend != null && stringToSend == null){
-      BufferedInputStream is = new BufferedInputStream(
-        new FileInputStream(fileToSend)
-      );
+      if (!fileToSend.isFile()) {
+        String toSend = "";
+        toSend += "<h1>Files in root</h1>\n";
+        for (File child : fileToSend.listFiles()) {
+          if (child.isFile()) {
+            String name = child.getName();
+            toSend += "<a href=\"./" + name + "\">" + name + "</a><br/>\n";
+          }
+        }
+        os.write(toSend.getBytes());
+      } else {
+        BufferedInputStream is = new BufferedInputStream(
+          new FileInputStream(fileToSend)
+        );
 
-      byte[] buffer = new byte[1024];
-      int totalLength = 0;
-      int length;
-      while ((length = is.read(buffer)) > 0) {
-        //System.out.print(new String(buffer, 0, length));
-        os.write(buffer, 0, length);
-        totalLength += length;
+        byte[] buffer = new byte[1024];
+        int totalLength = 0;
+        int length;
+        WebServer.log("While writing start");
+        while ((length = is.read(buffer)) > 0) {
+          //System.out.print(new String(buffer, 0, length));
+          os.write(buffer, 0, length);
+          totalLength += length;
+        }
+        WebServer.log("While writing end");
+        System.out.println(
+          "HttpResponse.sendFile : " + totalLength + " bytes sent"
+        );
+        is.close();
       }
-      System.out.println(
-        "HttpResponse.sendFile : " + totalLength + " bytes sent"
-      );
-      is.close();
     } else if (fileToSend == null && stringToSend != null){
       os.write(stringToSend.getBytes()); 
     } else {
       System.out.println("Erreur trop de fichiers d'envoi spécifiés");
     }
-    
   }
 
   /**
@@ -180,6 +199,7 @@ public class HttpResponse {
     "eps",
   };
   private static final String[] songExt = {
+    "mpeg",
     "3gp",
     "aa",
     "aac",
@@ -206,9 +226,12 @@ public class HttpResponse {
     "mpc",
     "msv",
     "nmf",
-    "ogg, oga, mogg",
+    "ogg",
+    "oga",
+    "mogg",
     "opus",
-    "ra, rm",
+    "ra",
+    "rm",
     "raw",
     "rf64",
     "sln",

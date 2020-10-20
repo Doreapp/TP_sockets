@@ -2,6 +2,7 @@ package http;
 
 import java.io.*;
 import java.util.*;
+import http.server.WebServer;
 
 /**
  * Classe représentant une requête HTTP
@@ -33,16 +34,19 @@ public class HttpRequest {
    * @return la requête construite ou null si inputStream vide
    */
   public static HttpRequest read(InputStream inputStream) throws IOException {
+    WebServer.log("Request.read");
     BufferedReader in = new BufferedReader(new InputStreamReader(inputStream));
 
     // Read header :
     String str = ".";
     String head = "";
     while (str != null && !str.equals("")) {
+      WebServer.log("While str != null");
       str = in.readLine();
       head += str + "\n";
     }
     if (head == null || head.trim().isEmpty() || head.trim().equals("null")) {
+      WebServer.log("header null, stop reading");
       return null;
     }
 
@@ -54,6 +58,7 @@ public class HttpRequest {
       String body = new String(buffer);
       result.setBody(body);
     }
+    WebServer.log("Retrun Built Web Request");
     return result;
   }
 
