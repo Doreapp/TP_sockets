@@ -116,7 +116,7 @@ public class HttpResponse {
 
   /**
    * Indique le String à envoyé en retour (pour les GET)
-   * @param string text à transmettre
+   * @param text texte à transmettre
    */
   public void setStringToSend(String text) {
     this.stringToSend = text;
@@ -126,6 +126,7 @@ public class HttpResponse {
    * Lit et transmet le fichier indiqué avec {@link setFileToSend}
    * à travert l'output stream fourni
    * @param os Buffered Output Stream utilisé pour communiquer avec le client
+   * @throws IOException si erreur d'écriture
    */
   public void sendFile(BufferedOutputStream os) throws IOException {
     WebServer.log("Response.send");

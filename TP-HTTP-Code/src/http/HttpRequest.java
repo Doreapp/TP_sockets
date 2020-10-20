@@ -32,6 +32,7 @@ public class HttpRequest {
    * Lit l'input fourni et retourne une requête HTTP correspondante
    * @param inputStream stream à lire (contenant la requête)
    * @return la requête construite ou null si inputStream vide
+   * @throws IOException si erreur de lecture
    */
   public static HttpRequest read(InputStream inputStream) throws IOException {
     WebServer.log("Request.read");

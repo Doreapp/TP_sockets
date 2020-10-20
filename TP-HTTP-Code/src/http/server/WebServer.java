@@ -5,9 +5,9 @@ import http.HttpResponse;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.*;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Web Server gérant des requêtes HTTP
@@ -60,6 +60,12 @@ public class WebServer {
               response.sendFile(out);
             } catch (IOException e) {
               log("Exception thrown while sending file : " + e.getMessage());
+              try {
+                HttpResponse response = new HttpResponse(
+                  HttpResponse.Code.SC_INTERNAL_SERVER_ERROR
+                );
+                out.write(response.getHeader().getBytes());
+              } catch (IOException e) {}
             }
             try {
               out.flush();
@@ -125,35 +131,57 @@ public class WebServer {
     } else {
       HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
       response.findContentType(request.getUrl());
-      if("text/json".equals(response.getContentType())){
-        int exitValue=1;
+      if ("text/json".equals(response.getContentType())) {
+        int exitValue = 1;
         String stdout = "";
         String stderr = "";
-        try{
+        try {
           Runtime runtime = Runtime.getRuntime();
           String[] command;
           String param = request.get("params");
-          if(param != null && param.length() > 0){
+          if (param != null && param.length() > 0) {
             String[] params = param.split("&");
-            command = new String[params.length+1];
-            for(int i = 0; i < params.length; i++){
-              command[i+1] = params[i].substring(params[i].indexOf("=")+1);
+            command = new String[params.length + 1];
+            for (int i = 0; i < params.length; i++) {
+              command[i + 1] = params[i].substring(params[i].indexOf("=") + 1);
             }
-          }else{
+          } else {
             command = new String[1];
           }
-          command[0] = FILES_ROOT+request.getUrl();
+          command[0] = FILES_ROOT + request.getUrl();
           Process process = runtime.exec(command);
-          stdout = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
-          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+          stdout =
+            new BufferedReader(
+              new InputStreamReader(
+                process.getInputStream(),
+                StandardCharsets.UTF_8
+              )
+            )
+              .lines()
+              .collect(Collectors.joining("\n"));
+          stderr =
+            new BufferedReader(
+              new InputStreamReader(
+                process.getErrorStream(),
+                StandardCharsets.UTF_8
+              )
+            )
+              .lines()
+              .collect(Collectors.joining("\n"));
           exitValue = process.waitFor();
-        }catch (IOException e) {
+        } catch (IOException e) {
+          e.printStackTrace();
+        } catch (InterruptedException e) {
           e.printStackTrace();
         }
-        catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        String answer = "{\n  \"exitValue\":\""+exitValue+"\",\n  \"stdout\":\""+stdout+"\",\n  \"stderr\":\""+stderr+"\"\n}";
+        String answer =
+          "{\n  \"exitValue\":\"" +
+          exitValue +
+          "\",\n  \"stdout\":\"" +
+          stdout +
+          "\",\n  \"stderr\":\"" +
+          stderr +
+          "\"\n}";
         response.setContentLength(answer.length());
         response.setStringToSend(answer);
       } else {
@@ -219,13 +247,15 @@ public class WebServer {
     // Same as post without appending
 
     File file = getFile(request.getUrl());
-    if (file.exists() && !file.isFile()) {
+    if (file.exists()) {
       return new HttpResponse(HttpResponse.Code.SC_BAD_REQUEST);
+    } else if (!file.isFile()) {
+      return new HttpResponse(HttpResponse.Code.SC_FORBIDDEN);
     } else {
       boolean fileExisted = file.exists();
       boolean ok = writeToFile(file, request.getBody(), false);
       if (!ok) {
-        return new HttpResponse(HttpResponse.Code.SC_NOT_MODIFIED);
+        return new HttpResponse(HttpResponse.Code.SC_METHOD_NOT_ALLOWED);
       } else if (fileExisted) {
         return new HttpResponse(HttpResponse.Code.SC_OK);
       } else {
@@ -241,13 +271,15 @@ public class WebServer {
    */
   public HttpResponse handleDeleteRequest(HttpRequest request) {
     File file = getFile(request.getUrl());
-    if (file == null || !file.exists() || !file.isFile()) {
+    if (file == null || !file.exists()) {
       return HttpResponse.responseNotFound();
-    } else {
+    } else if (!file.isFile()) {
+      return new HttpResponse(HttpResponse.Code.SC_FORBIDDEN);
+    }else {
       if (file.delete()) {
         return new HttpResponse(HttpResponse.Code.SC_OK);
       } else {
-        return new HttpResponse(HttpResponse.Code.SC_NOT_MODIFIED);
+        return new HttpResponse(HttpResponse.Code.SC_METHOD_NOT_ALLOWED);
       }
     }
   }
@@ -287,6 +319,7 @@ public class WebServer {
   /**
    * Ecrit un message sur la console (précédé de [LOG])
    * A utiliser pour comprendre le comportement du server
+   * @param msg message à logger
    */
   public static void log(String msg) {
     System.out.println("[LOG] " + msg);
