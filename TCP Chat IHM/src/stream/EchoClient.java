@@ -66,17 +66,10 @@ public class EchoClient implements Handler, ConnectionFinishListener {
    * Affiche le message dans le chat
    */
   public void handle(String message) {
-    // addChat("> "+message);
     String fil = chat.getText();
     fil += '\n'+message;
     chat.setText(fil);
   }
-
-  private void addChat(String message){
-      String fil = chat.getText();
-      fil += '\n'+message;
-      chat.setText(fil);
-   }
 
    /**
    * Demande l'envoi du message transmit par l'IHM
