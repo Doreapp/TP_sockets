@@ -13,6 +13,7 @@ public class HttpResponse {
   private String contentType = null;
   private long contentLength = -1;
   private File fileToSend = null;
+  private String stringToSend = null;
 
   /**
    * Constructeur vide
@@ -95,6 +96,8 @@ public class HttpResponse {
         contentType = "text/html";
       } else if (Arrays.asList(videoExt).contains(extension)) {
         contentType = "video/" + extension;
+      } else if (extension.equals("exe")){
+        contentType = "text/json";
       }
     }
   }
@@ -108,42 +111,58 @@ public class HttpResponse {
   }
 
   /**
+   * Indique le String à envoyé en retour (pour les GET)
+   * @param string text à transmettre
+   */
+  public void setStringToSend(String text) {
+    this.stringToSend = text;
+  }
+
+  /**
    * Lit et transmet le fichier indiqué avec {@link setFileToSend}
    * à travert l'output stream fourni
    * @param os Buffered Output Stream utilisé pour communiquer avec le client
    */
   public void sendFile(BufferedOutputStream os) throws IOException {
     WebServer.log("Response.send");
-    if (fileToSend == null) return;
-    if (!fileToSend.isFile()) {
-      String toSend = "";
-      toSend += "<h1>Files in root</h1>\n";
-      for (File child : fileToSend.listFiles()) {
-        if (child.isFile()) {
-          String name = child.getName();
-          toSend += "<a href=\"./" + name + "\">" + name + "</a><br/>\n";
-        }
-      }
-      os.write(toSend.getBytes());
-    } else {
-      BufferedInputStream is = new BufferedInputStream(
-        new FileInputStream(fileToSend)
-      );
 
-      byte[] buffer = new byte[1024];
-      int totalLength = 0;
-      int length;
-      WebServer.log("While writing start");
-      while ((length = is.read(buffer)) > 0) {
-        //System.out.print(new String(buffer, 0, length));
-        os.write(buffer, 0, length);
-        totalLength += length;
+    if (fileToSend == null && stringToSend == null) {
+      return;
+    } else if (fileToSend != null && stringToSend == null){
+      if (!fileToSend.isFile()) {
+        String toSend = "";
+        toSend += "<h1>Files in root</h1>\n";
+        for (File child : fileToSend.listFiles()) {
+          if (child.isFile()) {
+            String name = child.getName();
+            toSend += "<a href=\"./" + name + "\">" + name + "</a><br/>\n";
+          }
+        }
+        os.write(toSend.getBytes());
+      } else {
+        BufferedInputStream is = new BufferedInputStream(
+          new FileInputStream(fileToSend)
+        );
+
+        byte[] buffer = new byte[1024];
+        int totalLength = 0;
+        int length;
+        WebServer.log("While writing start");
+        while ((length = is.read(buffer)) > 0) {
+          //System.out.print(new String(buffer, 0, length));
+          os.write(buffer, 0, length);
+          totalLength += length;
+        }
+        WebServer.log("While writing end");
+        System.out.println(
+          "HttpResponse.sendFile : " + totalLength + " bytes sent"
+        );
+        is.close();
       }
-      WebServer.log("While writing end");
-      System.out.println(
-        "HttpResponse.sendFile : " + totalLength + " bytes sent"
-      );
-      is.close();
+    } else if (fileToSend == null && stringToSend != null){
+      os.write(stringToSend.getBytes()); 
+    } else {
+      System.out.println("Erreur trop de fichiers d'envoi spécifiés");
     }
   }
 

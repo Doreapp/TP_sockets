@@ -124,11 +124,45 @@ public class WebServer {
       return HttpResponse.responseNotFound();
     } else {
       HttpResponse response = new HttpResponse(HttpResponse.Code.SC_OK);
-      response.findContentType(request.getUrl());
-      if (file.isFile()) {
-        response.setContentLength(file.length());
+      if(request.getContentType().equals("application/exe")){
+        int exitValue=1;
+        String stdout = "";
+        String stderr = "";
+        try{
+          Runtime runtime = Runtime.getRuntime();
+          String[] command;
+          String param = request.get("params");
+          if(param != null && param.length() > 0){
+            String[] params = param.split("&");
+            command = new String[params.length+1];
+            for(int i = 0; i < params.length; i++){
+              command[i+1] = params[i].substring(params[i].indexOf("=")+1);
+            }
+          }else{
+            command = new String[1];
+          }
+          command[0] = FILES_ROOT+request.getUrl();
+          Process process = runtime.exec(command);
+          stdout = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+          stderr = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+          exitValue = process.waitFor();
+        }catch (IOException e) {
+          e.printStackTrace();
+        }
+        catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        response.findContentType(request.getUrl());
+        String answer = "{\n  \"exitValue\":\""+exitValue+"\",\n  \"stdout\":\""+stdout+"\",\n  \"stderr\":\""+stderr+"\"\n}";
+        response.setContentLength(answer.length());
+        response.setStringToSend(answer);
+      } else {
+        response.findContentType(request.getUrl());
+        if (file.isFile()) {
+          response.setContentLength(file.length());
+        }
+        response.setFileToSend(file);
       }
-      response.setFileToSend(file);
       return response;
     }
   }
