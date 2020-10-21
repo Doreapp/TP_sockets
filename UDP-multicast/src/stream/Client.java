@@ -185,7 +185,6 @@ public class Client implements Sender, Handler {
    * Ferme les threads et connexions
    **/
   private void close() {
-    listeningThread.close();
     groupSocket.close();
   }
 }
