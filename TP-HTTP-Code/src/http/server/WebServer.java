@@ -61,11 +61,11 @@ public class WebServer {
             } catch (IOException e) {
               log("Exception thrown while sending file : " + e.getMessage());
               try {
-                HttpResponse response = new HttpResponse(
+                HttpResponse responseError = new HttpResponse(
                   HttpResponse.Code.SC_INTERNAL_SERVER_ERROR
                 );
-                out.write(response.getHeader().getBytes());
-              } catch (IOException e) {}
+                out.write(responseError.getHeader().getBytes());
+              } catch (IOException e2) {}
             }
             try {
               out.flush();
