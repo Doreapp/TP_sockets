@@ -63,7 +63,6 @@ public class EchoClient implements Handler, ConnectionFinishListener {
   /**
    * Callback appelé à la reception d'un message
    * Affiche le message dans le chat
-   * @param message message reçu
    */
   public void handle(String message) {
     String fil = chat.getText();
@@ -73,7 +72,7 @@ public class EchoClient implements Handler, ConnectionFinishListener {
 
    /**
    * Demande l'envoi du message transmit par l'IHM
-   * @param message message à envoyer
+   * @param message Message à envoyer sur le réseau
    */
    public void sendMessage(String message){
       sendingThread.sendMessage(message);
