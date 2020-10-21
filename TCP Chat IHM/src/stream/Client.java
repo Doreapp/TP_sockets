@@ -55,12 +55,7 @@ public class Client extends JFrame
                               addChat("Bad entries");
                             } else {
                              nickname = nom;
-                             try{
-                               echoClient = new EchoClient(host,p,nom,chat);
-                             }catch(IOException exc){
-                             System.out.println(exc);
-                             }
-                              
+                             echoClient = new EchoClient(host,p,nom,chat);
                             }
                       }
               });
@@ -122,8 +117,8 @@ public class Client extends JFrame
        }
 
        /**
-        * main methode
-        * @param args options en ligne de commande (inutiles ici)
+        * main method
+        * @param args Aucun paramètre à passer
        **/
        public static void main(String[] args)
        {

@@ -30,7 +30,7 @@ public class EchoServerMultiThreaded
    * Constructeur du serveur
    * @param port port de la connexion
    */
-  public EchoServerMultiThreaded(String port){
+  public EchoServerMultiThreaded(String port) {
     try {
       listenSocket = new ServerSocket(Integer.parseInt(port)); // port
       System.out.println("Server ready...");
